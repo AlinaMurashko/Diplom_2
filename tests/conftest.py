@@ -1,55 +1,32 @@
 import allure
 import pytest
-import requests
-from data import HTTPStatus, Fields
-from urls import APIEndpoints
-from helpers import generate_random_string
-
+from data import Fields
+from helpers import delete_user, generate_user_payload, get_ingredients, register_user
 
 @pytest.fixture
-def user_payload():
-    """
-    Фикстура генерирует данные для нового пользователя.
-    Возвращает словарь с данными нового пользователя.
-    """
-    email = f"testuser_{generate_random_string(5)}@yandex.ru"
-    password = generate_random_string(8)
-    name = f"TestUser_{generate_random_string(5)}"
-
-    with allure.step(f"Генерация данных пользователя: email={email}, name={name}"):
-        return {
-            Fields.EMAIL: email,
-            Fields.PASSWORD: password,
-            Fields.NAME: name
-        }
-
-
-@pytest.fixture
-def created_user(user_payload):
+def registered_user():
     """
     Фикстура создает пользователя, возвращает его данные и токен,
     а после теста удаляет его.
     """
+    user_payload = generate_user_payload()
     with allure.step(f"Создание пользователя с email: {user_payload[Fields.EMAIL]}"):
-        response = requests.post(APIEndpoints.REGISTER, data=user_payload)
+        response = register_user(user_payload)
         response_data = response.json()
-
-    user_payload["access_token"] = response_data.get("accessToken")
+        user_payload[Fields.ACCESS_TOKEN] = response_data.get("accessToken")
 
     yield user_payload
 
-    if user_payload["access_token"]:
+    access_token = user_payload.get(Fields.ACCESS_TOKEN)
+    if access_token:
         with allure.step(f"Удаление пользователя с email: {user_payload[Fields.EMAIL]}"):
-            headers = {"Authorization": user_payload["access_token"]}
-            response = requests.delete(APIEndpoints.USER, headers=headers)
-            assert response.status_code == HTTPStatus.ACCEPTED
-
+            delete_user(access_token)
 
 @pytest.fixture
 def ingredients_list():
     """Фикстура возвращает список актуальных хешей ингредиентов."""
     with allure.step("Получение списка доступных ингредиентов"):
-        response = requests.get(APIEndpoints.INGREDIENTS)
+        response = get_ingredients()
         ingredients_data = response.json()
 
     ingredients_ids = [ingredient["_id"] for ingredient in ingredients_data.get("data", [])]

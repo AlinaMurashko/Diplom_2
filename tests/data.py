@@ -19,6 +19,7 @@ class Fields:
     EMAIL = "email"
     NAME = "name"
     PASSWORD = "password"
+    ACCESS_TOKEN = "access_token"
 
 class TestData:
     REQUIRED_USER_FIELDS = [Fields.EMAIL, Fields.PASSWORD, Fields.NAME]
