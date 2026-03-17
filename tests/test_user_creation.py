@@ -24,11 +24,6 @@ class TestUserCreation:
             assert response_data["user"][Fields.NAME] == user_data[Fields.NAME]
             assert "accessToken" in response_data
 
-        with allure.step("Удаление созданного пользователя"):
-            access_token = response_data.get("accessToken")
-            delete_response = delete_user(access_token)
-            assert delete_response.status_code == HTTPStatus.ACCEPTED
-
     @allure.title("Невозможно создать пользователя, который уже существует")
     def test_create_existing_user_fail(self, registered_user):
         with allure.step("Попытка повторной регистрации того же пользователя"):
